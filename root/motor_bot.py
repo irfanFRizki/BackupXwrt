@@ -1309,7 +1309,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     """Main function"""
     # Ganti dengan token bot Anda
-    TOKEN = "8375794847:AAG50hbBzBEQInd0zRL06DGJHSDlu9HoVfc"
+    TOKEN = "xxxxxxxxxxxxxxxxxxxxxxxxxx"
     
     logger.info("="*50)
     logger.info("Motor Maintenance Bot Starting...")
