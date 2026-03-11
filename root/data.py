@@ -29,8 +29,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ============ KONFIGURASI ============
-BOT_TOKEN = "8568041711:AAGInAzY3xI8gJuKX2xCDyvO-pwcWlwLieU"  # Token dari @BotFather
-ADMIN_CHAT_ID = "5645537022"  # ID Telegram admin (gunakan @userinfobot)
+BOT_TOKEN = "xxxxxxxxxxxxxxxxxxxxxxx"  # Token dari @BotFather
+ADMIN_CHAT_ID = "xxxxxxxxxxxxxxxxxxx"  # ID Telegram admin (gunakan @userinfobot)
 
 # Auto-detect BASE_PATH dari mount point yang tersedia
 def detect_base_path():
