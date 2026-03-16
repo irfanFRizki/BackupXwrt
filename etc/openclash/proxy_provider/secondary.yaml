@@ -1,0 +1,23 @@
+proxies:
+# > Config by Goodboy X MahaVPN
+# > Join Grup tele for More Update: https://t.me/MahaVPN_Group
+# > All Format Akun Clash Silahkan Akses Link Berikut: https://github.com/GboyGud/FORMAT_AKUN_CLASH
+# > Mulai Baris Ini Kebawah Isi Dengan Akun Anda Sendiri
+# > Isi Menggunakan Akun VPN dengan Metode Bug Paket RAJA, bebas trojan/vmess
+
+- name: Vmess Paket RAJA
+    server: idx8.mahavpn.web.id
+    port: 443
+    type: vmess
+    uuid: c252a4be-87f8-49be-b0e5-4aa4881c741f
+    alterId: 0
+    cipher: auto
+    tls: true
+    skip-cert-verify: true
+    servername: idx8.mahavpn.web.id
+    network: ws
+    ws-opts:
+      path: /alhamdulillah
+      headers:
+        Host: idx8.mahavpn.web.id
+    udp: true
