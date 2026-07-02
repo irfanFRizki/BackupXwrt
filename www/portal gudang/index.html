@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal WMS — Irfan Fajarrizki</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <style>
+    /* ─────────────────────────────────────────
+       TOKENS
+    ───────────────────────────────────────── */
+    :root {
+      --bg:          #0a0c10;
+      --surface:     #111318;
+      --card:        #131820;
+      --card-border: #1e2738;
+      --divider:     #1a2232;
+
+      --acc-green:  #00e5a0;
+      --acc-indigo: #818cf8;
+      --acc-sky:    #38bdf8;
+      --acc-pink:   #f472b6;
+
+      --text-pri:   #dde4f0;
+      --text-sec:   #6b7fa0;
+      --text-muted: #384258;
+
+      --mono: 'Space Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+      --radius-card: 18px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text-pri);
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* warehouse-grid background */
+      background-image:
+        linear-gradient(rgba(30,39,56,0.45) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,39,56,0.45) 1px, transparent 1px),
+        radial-gradient(ellipse 80% 50% at 10% -10%, rgba(0,229,160,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 45% at 90% 110%, rgba(129,140,248,0.05) 0%, transparent 55%);
+      background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+    }
+
+    /* ─────────────────────────────────────────
+       SCROLLBAR
+    ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a3550; border-radius: 8px; }
+
+    /* ─────────────────────────────────────────
+       LAYOUT
+    ───────────────────────────────────────── */
+    .page {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ─────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────── */
+    .portal-header {
+      padding: 64px 0 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 18px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--card-border);
+      border-radius: 100px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--text-sec);
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--acc-green);
+      animation: blink 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,229,160,0.4); }
+      50%       { opacity: 0.55; box-shadow: 0 0 0 5px rgba(0,229,160,0); }
+    }
+
+    .header-eyebrow {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--acc-green);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-eyebrow::before,
+    .header-eyebrow::after {
+      content: '';
+      width: 40px;
+      height: 1px;
+      background: currentColor;
+      opacity: 0.4;
+    }
+
+    .portal-title {
+      font-size: clamp(2.1rem, 5.5vw, 3.2rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      color: var(--text-pri);
+    }
+
+    .portal-title em {
+      font-style: normal;
+      color: var(--acc-green);
+    }
+
+    .portal-subtitle {
+      font-size: 14.5px;
+      color: var(--text-sec);
+      max-width: 430px;
+      line-height: 1.65;
+    }
+
+    /* Clock + date strip */
+    .time-strip {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 22px;
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      margin-top: 6px;
+    }
+
+    .time-clock {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-pri);
+      letter-spacing: 0.05em;
+    }
+
+    .time-sep {
+      width: 1px;
+      height: 28px;
+      background: var(--divider);
+    }
+
+    .time-date {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-sec);
+      line-height: 1.6;
+      text-align: left;
+    }
+
+    /* ─────────────────────────────────────────
+       SECTION LABEL
+    ───────────────────────────────────────── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .section-label span {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .section-label::before,
+    .section-label::after {
+      content: '';
+      height: 1px;
+      background: var(--divider);
+    }
+
+    .section-label::before { width: 20px; flex-shrink: 0; }
+    .section-label::after  { flex: 1; }
+
+    /* ─────────────────────────────────────────
+       GRID
+    ───────────────────────────────────────── */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    /* ─────────────────────────────────────────
+       APP CARD
+    ───────────────────────────────────────── */
+    .app-card {
+      --ac:   #fff;
+      --ac-a: rgba(255,255,255,0.08);
+      --ac-g: rgba(255,255,255,0.03);
+
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.22s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+
+      /* staggered fade-in via --i custom prop */
+      animation: fadeUp 0.55s ease both;
+      animation-delay: calc(var(--i, 0) * 80ms + 100ms);
+    }
+
+    /* top accent line */
+    .app-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-card);
+      border-top: 2px solid var(--ac);
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
+    }
+
+    /* radial glow */
+    .app-card::after {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: var(--ac);
+      opacity: 0;
+      filter: blur(70px);
+      transition: opacity 0.35s;
+      pointer-events: none;
+    }
+
+    .app-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--ac-a);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+    }
+
+    .app-card:hover::before { opacity: 1; }
+    .app-card:hover::after  { opacity: 0.07; }
+
+    /* per-app colours */
+    .app-card[data-app="convert"]  { --ac: var(--acc-green);  --ac-a: rgba(0,229,160,0.25);   --ac-g: rgba(0,229,160,0.04); }
+    .app-card[data-app="kalender"] { --ac: var(--acc-indigo); --ac-a: rgba(129,140,248,0.25); --ac-g: rgba(129,140,248,0.04); }
+    .app-card[data-app="xp"]       { --ac: var(--acc-sky);    --ac-a: rgba(56,189,248,0.25);  --ac-g: rgba(56,189,248,0.04); }
+    .app-card[data-app="ml"]       { --ac: var(--acc-pink);   --ac-a: rgba(244,114,182,0.25); --ac-g: rgba(244,114,182,0.04); }
+
+    /* ─── card body ─── */
+    .card-body {
+      padding: 26px 26px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      background: radial-gradient(ellipse 60% 50% at -10% -10%, var(--ac-g), transparent 70%);
+    }
+
+    /* ─── card top row ─── */
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 11px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .app-card:hover .card-icon {
+      background: var(--ac-g);
+      border-color: var(--ac-a);
+    }
+
+    .card-badge {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ac);
+      padding: 3px 8px;
+      border: 1px solid var(--ac-a);
+      border-radius: 4px;
+      background: var(--ac-g);
+      white-space: nowrap;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    /* ─── card info ─── */
+    .card-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      color: var(--text-pri);
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: var(--text-sec);
+      line-height: 1.65;
+    }
+
+    /* ─── feature tags ─── */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.06em;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--divider);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ─── card footer ─── */
+    .card-footer {
+      padding: 14px 26px 20px;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-status {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #34d399;
+      animation: blink 3s ease-in-out infinite;
+    }
+
+    .btn-open {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      background: var(--ac);
+      color: #080a0e;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.18s, transform 0.18s;
+      white-space: nowrap;
+    }
+
+    .btn-open:hover { opacity: 0.85; transform: scale(1.04); }
+
+    .btn-open svg {
+      width: 11px;
+      height: 11px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .app-card:hover .btn-open svg { transform: translate(2px, -2px); }
+
+    /* ─────────────────────────────────────────
+       APPSHEET TILE (alt style)
+    ───────────────────────────────────────── */
+    .appsheet-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .appsheet-tile {
+      --ac: #fff;
+      --ac-a: rgba(255,255,255,0.08);
+      --ac-g: rgba(255,255,255,0.05);
+
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      background: linear-gradient(135deg, var(--ac-g), transparent 60%), var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.25s ease, background 0.25s ease;
+      animation: fadeUp 0.55s ease both;
+      animation-delay: calc(var(--i, 0) * 80ms + 100ms);
+    }
+
+    .appsheet-tile:hover {
+      transform: translateY(-3px) scale(1.01);
+      border-color: var(--ac-a);
+    }
+
+    .appsheet-tile[data-app="xuping"] { --ac: #fbbf24; --ac-a: rgba(251,191,36,0.3);  --ac-g: rgba(251,191,36,0.12); }
+    .appsheet-tile[data-app="meilyn"] { --ac: #a78bfa; --ac-a: rgba(167,139,250,0.3); --ac-g: rgba(167,139,250,0.12); }
+
+    /* app-icon: rounded-square glyph like a phone home screen icon */
+    .tile-icon {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      background: linear-gradient(145deg, var(--ac), rgba(255,255,255,0.25));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 6px 18px -6px var(--ac-a), inset 0 1px 0 rgba(255,255,255,0.35);
+      position: relative;
+    }
+
+    .tile-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.18), transparent 55%);
+    }
+
+    .tile-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .tile-name {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-pri);
+    }
+
+    .tile-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-sec);
+    }
+
+    .tile-dots {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 4px);
+      grid-template-rows: repeat(2, 4px);
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .tile-dots span {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--ac);
+      opacity: 0.55;
+    }
+
+    .tile-arrow {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--ac-g);
+      border: 1px solid var(--ac-a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ac);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .appsheet-tile:hover .tile-arrow {
+      background: var(--ac);
+      color: #080a0e;
+      transform: translate(2px, -2px);
+    }
+
+    .tile-arrow svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    @media (max-width: 680px) {
+      .appsheet-grid { grid-template-columns: 1fr; }
+    }
+
+
+    .portal-footer {
+      margin-top: 52px;
+      padding-top: 24px;
+      border-top: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      animation: fadeUp 0.6s ease 0.45s both;
+    }
+
+    .footer-left {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .footer-left strong {
+      color: var(--acc-green);
+      display: block;
+    }
+
+    .footer-apps {
+      display: flex;
+      gap: 8px;
+    }
+
+    .footer-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid var(--card-border);
+    }
+
+    /* ─────────────────────────────────────────
+       ANIMATION
+    ───────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────── */
+    @media (max-width: 680px) {
+      .page { padding: 0 16px 60px; }
+      .portal-header { padding: 44px 0 40px; gap: 14px; }
+      .portal-title { font-size: 1.85rem; }
+      .time-strip { gap: 14px; padding: 8px 16px; }
+      .time-clock { font-size: 17px; }
+      .apps-grid { grid-template-columns: 1fr; }
+      .portal-footer { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 400px) {
+      .card-body { padding: 20px 18px 16px; }
+      .card-footer { padding: 12px 18px 16px; }
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, .app-card, .btn-open { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <!-- ── Header ── -->
+  <header class="portal-header">
+
+    <div class="live-badge">
+      <span class="live-dot"></span>
+      <span id="greetText">Selamat datang</span>
+    </div>
+
+    <div class="header-eyebrow">Portal Sistem</div>
+
+    <h1 class="portal-title">Warehouse <em>Management</em><br>System</h1>
+
+    <p class="portal-subtitle">
+      Semua aplikasi gudang dalam satu halaman. Pilih aplikasi untuk membuka di tab baru.
+    </p>
+
+    <div class="time-strip">
+      <span class="time-clock" id="clockEl">--:--:--</span>
+      <span class="time-sep"></span>
+      <div class="time-date" id="dateEl">--- ---</div>
+    </div>
+
+  </header>
+
+  <!-- ── Grid Label ── -->
+  <div class="section-label">
+    <span>6 Aplikasi Tersedia</span>
+  </div>
+
+  <!-- ── Apps Grid ── -->
+  <div class="apps-grid">
+
+    <!-- 1 · Generator PL & Kode Link -->
+    <div class="app-card" data-app="convert" style="--i:0" role="link" tabindex="0"
+         onclick="openApp('convert')" onkeydown="if(event.key==='Enter')openApp('convert')">
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-icon">📦</div>
+          <span class="card-badge">ERP & Appsheet</span>
+        </div>
+        <div>
+          <div class="card-title">Generator ERP<br>&amp; Upload ke AppSheet</div>
+        </div>
+        <div class="card-desc">
+          Generate data Packing List dan Kode Link dari file ERP. Mendukung format
+          XP, MLJ, MLT, dan MLL dengan laporan otomatis, preview, download dan upload ke Appsheet.
+        </div>
+        <div class="card-tags">
+          <span class="tag">ERP Generator</span>
+          <span class="tag">Kode Link</span>
+          <span class="tag">Excel Export</span>
+          <span class="tag">Preview &amp; Report</span>
+          <span class="tag">Multi-format</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-status"><span class="status-dot"></span>Online</span>
+        <button class="btn-open" onclick="event.stopPropagation(); openApp('convert')">
+          Buka Aplikasi
+          <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H4.5M9.5 1.5V6.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2 · Kalender Estimasi Barang -->
+    <div class="app-card" data-app="kalender" style="--i:1" role="link" tabindex="0"
+         onclick="openApp('kalender')" onkeydown="if(event.key==='Enter')openApp('kalender')">
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-icon">📅</div>
+          <span class="card-badge">Jadwal &amp; Monitoring</span>
+        </div>
+        <div>
+          <div class="card-title">Kalender Estimasi<br>Barang</div>
+        </div>
+        <div class="card-desc">
+          Pantau jadwal estimasi kedatangan barang per PL dalam tampilan kalender.
+          Dilengkapi analisa AI, panel admin, dan histogram shipment.
+        </div>
+        <div class="card-tags">
+          <span class="tag">Kalender PL</span>
+          <span class="tag">Analisa AI</span>
+          <span class="tag">Admin Panel</span>
+          <span class="tag">Histogram</span>
+          <span class="tag">Mini Dashboard</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-status"><span class="status-dot"></span>Online</span>
+        <button class="btn-open" onclick="event.stopPropagation(); openApp('kalender')">
+          Buka Aplikasi
+          <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H4.5M9.5 1.5V6.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3 · Surat Jalan XP / Xuping -->
+    <div class="app-card" data-app="xp" style="--i:2" role="link" tabindex="0"
+         onclick="openApp('xp')" onkeydown="if(event.key==='Enter')openApp('xp')">
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-icon">🔍</div>
+          <span class="card-badge">Sampel Xuping</span>
+        </div>
+        <div>
+          <div class="card-title">Sistem Surat Jalan<br>XP / Xuping</div>
+        </div>
+        <div class="card-desc">
+          Kelola surat jalan dan scan barcode untuk produk Xuping.
+          Fitur Cari Kolian dan Cek Harga PL Server dan RMB untuk diverifikasi.
+        </div>
+        <div class="card-tags">
+          <span class="tag">Surat Jalan</span>
+          <span class="tag">Barcode Scan</span>
+          <span class="tag">Cari Kolian</span>
+          <span class="tag">Cek Harga</span>
+          <span class="tag">Print</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-status"><span class="status-dot"></span>Online</span>
+        <button class="btn-open" onclick="event.stopPropagation(); openApp('xp')">
+          Buka Aplikasi
+          <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H4.5M9.5 1.5V6.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 · Surat Jalan ML / Multi-Brand -->
+    <div class="app-card" data-app="ml" style="--i:3" role="link" tabindex="0"
+         onclick="openApp('ml')" onkeydown="if(event.key==='Enter')openApp('ml')">
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-icon">🏷️</div>
+          <span class="card-badge">Sampel Meilyn · CX · LYN · TN</span>
+        </div>
+        <div>
+          <div class="card-title">Sistem Surat Jalan<br>ML / Multi-Brand</div>
+        </div>
+        <div class="card-desc">
+          Surat jalan multi-brand: Meilyn, CX, LYN, dan TN. Mendukung upload Nota
+          dengan foto produk untuk kode yang tidak ditemukan diserver.
+        </div>
+        <div class="card-tags">
+          <span class="tag">Meilyn · CX · LYN · TN</span>
+          <span class="tag">Upload Nota</span>
+          <span class="tag">Foto Produk</span>
+          <span class="tag">Cek Harga</span>
+          <span class="tag">Print</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-status"><span class="status-dot"></span>Online</span>
+        <button class="btn-open" onclick="event.stopPropagation(); openApp('ml')">
+          Buka Aplikasi
+          <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H4.5M9.5 1.5V6.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /apps-grid -->
+
+  <!-- ── Grid Label ── -->
+  <div class="section-label">
+    <span>Appsheet</span>
+  </div>
+
+  <!-- ── Appsheet Tiles ── -->
+  <div class="appsheet-grid">
+
+    <!-- 5 · XUPING (Appsheet) -->
+    <div class="appsheet-tile" data-app="xuping" style="--i:4" role="link" tabindex="0"
+         onclick="openApp('xuping')" onkeydown="if(event.key==='Enter')openApp('xuping')">
+      <div class="tile-icon">📱</div>
+      <div class="tile-body">
+        <div class="tile-name">XUPING</div>
+        <div class="tile-sub">
+          <span class="tile-dots"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+          Appsheet
+        </div>
+      </div>
+      <div class="tile-arrow">
+        <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M1.5 9.5L9.5 1.5M9.5 1.5H4.5M9.5 1.5V6.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 6 · MEILYN (Appsheet) -->
+    <div class="appsheet-tile" data-app="meilyn" style="--i:5" role="link" tabindex="0"
+         onclick="openApp('meilyn')" onkeydown="if(event.key==='Enter')openApp('meilyn')">
+      <div class="tile-icon">📱</div>
+      <div class="tile-body">
+        <div class="tile-name">MEILYN</div>
+        <div class="tile-sub">
+          <span class="tile-dots"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+          Appsheet
+        </div>
+      </div>
+      <div class="tile-arrow">
+        <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M1.5 9.5L9.5 1.5M9.5 1.5H4.5M9.5 1.5V6.5"/>
+        </svg>
+      </div>
+    </div>
+
+  </div><!-- /appsheet-grid -->
+
+
+
+
+  <!-- ── Footer ── -->
+  <footer class="portal-footer">
+    <div class="footer-left">
+      <strong>Irfan Fajarrizki</strong>
+      Warehouse Management System - 2026
+    </div>
+    <div class="footer-apps">
+      <div class="footer-dot" style="background:var(--acc-green)"></div>
+      <div class="footer-dot" style="background:var(--acc-indigo)"></div>
+      <div class="footer-dot" style="background:var(--acc-sky)"></div>
+      <div class="footer-dot" style="background:var(--acc-pink)"></div>
+    </div>
+  </footer>
+
+</div><!-- /page -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  ⚙️  KONFIGURASI — ISI URL APLIKASI DI SINI
+// ═══════════════════════════════════════════════════════
+const APP_URLS = {
+  convert:  'https://pl.irfanfajarrizki.my.id',   // Generator PL & Kode Link
+  kalender: 'https://kalender.irfanfajarrizki.my.id',      // Kalender Estimasi Barang
+  xp:       'https://xp.irfanfajarrizki.my.id',            // Surat Jalan Xuping
+  ml:       'https://ml.irfanfajarrizki.my.id',            // Surat Jalan Multi-Brand (ML)
+  xuping:   'https://www.appsheet.com/start/427fac39-98a6-4d00-97f2-e0e25fce462a',      // Appsheet XUPING
+  meilyn:   'https://www.appsheet.com/start/427fac39-98a6-4d00-97f2-e0e25fce462a',      // Appsheet MEILYN
+};
+// ═══════════════════════════════════════════════════════
+
+// Open app in new tab
+function openApp(key) {
+  const url = APP_URLS[key];
+  if (!url || url.includes('GANTI-URL')) {
+    alert('⚙️ URL untuk aplikasi "' + key + '" belum diisi.\nEdit bagian APP_URLS di dalam file HTML ini.');
+    return;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+// ── Greeting ──
+(function setGreeting() {
+  const h = new Date().getHours();
+  const g = h < 11 ? 'Selamat pagi'
+          : h < 15 ? 'Selamat siang'
+          : h < 18 ? 'Selamat sore'
+          :           'Selamat malam';
+  const el = document.getElementById('greetText');
+  if (el) el.textContent = g + ', Everybody';
+})();
+
+// ── Clock ──
+const DAYS   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function tickClock() {
+  const now  = new Date();
+  const hh   = pad(now.getHours());
+  const mm   = pad(now.getMinutes());
+  const ss   = pad(now.getSeconds());
+  const day  = DAYS[now.getDay()];
+  const date = now.getDate();
+  const mon  = MONTHS[now.getMonth()];
+  const yr   = now.getFullYear();
+
+  const clockEl = document.getElementById('clockEl');
+  const dateEl  = document.getElementById('dateEl');
+  if (clockEl) clockEl.textContent = `${hh}:${mm}:${ss}`;
+  if (dateEl)  dateEl.innerHTML    = `${day}<br>${date} ${mon} ${yr}`;
+}
+
+tickClock();
+setInterval(tickClock, 1000);
+</script>
+</body>
+</html>
